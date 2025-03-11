@@ -21,7 +21,7 @@ export const supabase: SupabaseClient = createClient(supabaseUrl, supabaseKey);
 (async () => {
     if (process.env.NODE_ENV !== 'test') {
         try {
-            const { data, error } = await supabase.from('api_keys').select('count', { count: 'exact' });
+            const { data, error } = await supabase.schema("nfc_verify").from('api_keys').select('count', { count: 'exact' });
             if (error) throw error;
             logger.info('[config/supabase.ts] Supabase connection successful');
         } catch (error) {

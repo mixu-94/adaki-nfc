@@ -31,7 +31,7 @@ export class StorageService {
             };
 
             // Log the verification attempt
-            const { error: verificationError } = await supabase
+            const { error: verificationError } = await supabase.schema("nfc_verify")
                 .from('verifications')
                 .insert(verificationRecord);
 
@@ -64,7 +64,7 @@ export class StorageService {
         try {
             // Check if tag exists
             const { data: existingTag, error: queryError } = await supabase
-                .from('tags')
+                .from('nfc_verify.tags')
                 .select('*')
                 .eq('tag_id', tagId)
                 .single();
@@ -76,7 +76,7 @@ export class StorageService {
             if (existingTag) {
                 // Update existing tag
                 const { error: updateError } = await supabase
-                    .from('tags')
+                    .from('nfc_verify.tags')
                     .update({
                         last_verified_at: new Date().toISOString(),
                         verification_count: existingTag.verification_count + 1,
@@ -96,7 +96,7 @@ export class StorageService {
                 };
 
                 const { error: insertError } = await supabase
-                    .from('tags')
+                    .from('nfc_verify.tags')
                     .insert(newTag);
 
                 if (insertError) {
@@ -120,7 +120,7 @@ export class StorageService {
     async getTagStatistics(tagId: string): Promise<TagRecord | null> {
         try {
             const { data, error } = await supabase
-                .from('tags')
+                .from('nfc_verify.tags')
                 .select('*')
                 .eq('tag_id', tagId)
                 .single();

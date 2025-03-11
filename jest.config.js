@@ -1,4 +1,3 @@
-/** @type {import('ts-jest').JestConfigWithTsJest} */
 module.exports = {
     preset: 'ts-jest',
     testEnvironment: 'node',
@@ -17,5 +16,13 @@ module.exports = {
     clearMocks: true,
     resetMocks: true,
     restoreMocks: true,
-    setupFiles: ['./jest.setup.js'],
+    setupFilesAfterEnv: ['./src/tests/test-setup.ts'],
+    reporters: [
+        'default',
+        ['./node_modules/jest-html-reporter', {
+            pageTitle: 'NFC Verification Test Report',
+            outputPath: './test-logs/test-report.html',
+            includeFailureMsg: true
+        }]
+    ]
 };

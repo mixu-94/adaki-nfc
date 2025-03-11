@@ -39,6 +39,7 @@
     "@types/node": "^18.x.x",
     "@types/supertest": "^2.x.x",
     "jest": "^29.x.x",
+    "jest-html-reporter": "^4.0.1",
     "nodemon": "^2.x.x",
     "supertest": "^6.x.x",
     "ts-jest": "^29.x.x",

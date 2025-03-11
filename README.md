@@ -117,7 +117,11 @@ Before running the application, set up the Supabase database with the following 
 
 ```sql
 -- Tags table to store information about verified tags
-CREATE TABLE tags (
+-- Create schema for NFC verification system
+CREATE SCHEMA IF NOT EXISTS nfc_verify;
+
+-- Tags table to store information about verified tags
+CREATE TABLE nfc_verify.tags (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   tag_id TEXT UNIQUE NOT NULL,
   first_verified_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -126,7 +130,7 @@ CREATE TABLE tags (
 );
 
 -- Verifications table to log all verification attempts
-CREATE TABLE verifications (
+CREATE TABLE nfc_verify.verifications (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   tag_id TEXT NOT NULL,
   success BOOLEAN NOT NULL,
@@ -137,7 +141,7 @@ CREATE TABLE verifications (
 );
 
 -- API keys for client authentication
-CREATE TABLE api_keys (
+CREATE TABLE nfc_verify.api_keys (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name TEXT NOT NULL,
   key TEXT UNIQUE NOT NULL,
@@ -147,10 +151,10 @@ CREATE TABLE api_keys (
   expires_at TIMESTAMP WITH TIME ZONE
 );
 
--- Create indexes for performance
-CREATE INDEX idx_verifications_tag_id ON verifications(tag_id);
-CREATE INDEX idx_verifications_created_at ON verifications(created_at);
-CREATE INDEX idx_api_keys_key ON api_keys(key);
+-- Create indexes for query optimization
+CREATE INDEX idx_verifications_tag_id ON nfc_verify.verifications(tag_id);
+CREATE INDEX idx_verifications_created_at ON nfc_verify.verifications(created_at);
+CREATE INDEX idx_api_keys_key ON nfc_verify.api_keys(key);
 ```
 
 ## API Documentation
