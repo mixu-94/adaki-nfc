@@ -6,6 +6,9 @@ export class TestLogger {
     private static logDir = path.join(process.cwd(), 'test-logs');
     private static logFile = path.join(TestLogger.logDir, 'test-results.log');
 
+    /**
+     * Initializes the test logger by creating the log directory and file
+     */
     static init(): void {
         // Create directory if it doesn't exist
         if (!fs.existsSync(TestLogger.logDir)) {
@@ -21,13 +24,24 @@ export class TestLogger {
         );
     }
 
-    static logTestResult(testName: string, passed: boolean, details?: any): void {
+    /**
+     * Logs a test result to the log file
+     * @param testName - Name of the test (can be undefined, handled safely)
+     * @param passed - Whether the test passed
+     * @param details - Optional details about the test
+     */
+    static logTestResult(testName: string | undefined, passed: boolean, details?: any): void {
         const status = passed ? 'PASS' : 'FAIL';
-        const entry = `[${status}] ${testName}\n${details ? JSON.stringify(details, null, 2) : ''}\n\n`;
+        const testNameSafe = testName || 'Unnamed Test';
+        const entry = `[${status}] ${testNameSafe}\n${details ? JSON.stringify(details, null, 2) : ''}\n\n`;
 
         fs.appendFileSync(TestLogger.logFile, entry);
     }
 
+    /**
+     * Logs coverage information to the log file
+     * @param coverage - Coverage data
+     */
     static logCoverage(coverage: any): void {
         fs.appendFileSync(
             TestLogger.logFile,

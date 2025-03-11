@@ -8,12 +8,12 @@ beforeAll(() => {
 
 // Capture test results
 afterEach((done) => {
-    // @ts-ignore
-    const testName = expect.getState().currentTestName;
-    // @ts-ignore
-    const testStatus = expect.getState().testResults.slice(-1)[0]?.status === 'passed';
+    // Use type assertions to safely extract test information
+    const testState: any = expect.getState();
+    const testName = testState?.currentTestName;
+    const testStatus = testState?.testResults?.slice(-1)[0]?.status === 'passed';
 
-    TestLogger.logTestResult(testName, testStatus);
+    TestLogger.logTestResult(testName, !!testStatus);
     done();
 });
 

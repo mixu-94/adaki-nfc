@@ -1,3 +1,4 @@
+// jest.config.js
 module.exports = {
     preset: 'ts-jest',
     testEnvironment: 'node',
@@ -22,7 +23,16 @@ module.exports = {
         ['./node_modules/jest-html-reporter', {
             pageTitle: 'NFC Verification Test Report',
             outputPath: './test-logs/test-report.html',
-            includeFailureMsg: true
+            includeFailureMsg: true,
+            // Add optimization options
+            useCssFile: true,
+            theme: 'lightTheme',
+            sort: 'status',
+            // Limit output size
+            statusIgnoreFilter: null,
+            includeConsoleLog: false,
+            // Improve rendering speed
+            styleOverridePath: null
         }]
     ]
 };
