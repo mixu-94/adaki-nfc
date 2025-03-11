@@ -1,0 +1,58 @@
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: adaki-nfc-dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}
+      - SDM_BACKEND_URL=http://sdm-backend:3001
+      - REDIS_URL=redis://redis:6379
+      - ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
+    depends_on:
+      - redis
+      - sdm-backend
+    networks:
+      - adaki-network
+    restart: unless-stopped
+
+  sdm-backend:
+    image: sdm-backend:latest
+    # Replace with actual image or build configuration
+    container_name: sdm-backend-dev
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+    networks:
+      - adaki-network
+    restart: unless-stopped
+
+  redis:
+    image: redis:6-alpine
+    container_name: adaki-redis-dev
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - adaki-network
+    restart: unless-stopped
+
+networks:
+  adaki-network:
+    driver: bridge
+
+volumes:
+  redis-data:
+    driver: local

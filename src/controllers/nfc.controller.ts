@@ -1,0 +1,125 @@
+import { Request, Response, NextFunction } from 'express';
+import { SumMessage, NfcVerificationError } from '../types/nfc.types';
+import nfcService from '../services/nfc.service';
+import { validateSumMessage } from '../utils/validation';
+import logger from '../utils/logger';
+
+export class NfcController {
+    /**
+     * Handles NFC tag verification requests
+     * @param req - Express request
+     * @param res - Express response
+     * @param next - Express next function
+     */
+    async verifyTag(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const { sumMessage } = req.body;
+
+            // Validate input
+            if (!validateSumMessage(sumMessage)) {
+                logger.warn('[controllers/nfc.controller.ts] Invalid SUM message format');
+
+                res.status(400).json({
+                    success: false,
+                    error: {
+                        code: 'INVALID_FORMAT',
+                        message: 'Invalid SUM message format'
+                    },
+                    timestamp: new Date().toISOString()
+                });
+                return;
+            }
+
+            // Process verification
+            const result = await nfcService.verifyNfcTag(
+                sumMessage,
+                req.ip,
+                req.headers['user-agent']
+            );
+
+            // Return successful response
+            res.status(200).json({
+                success: true,
+                data: {
+                    tagId: result.tagId,
+                    isValid: result.isValid,
+                    metadata: result.metadata,
+                    verifiedAt: result.timestamp.toISOString()
+                },
+                message: 'NFC tag successfully verified',
+                timestamp: new Date().toISOString()
+            });
+
+        } catch (error) {
+            // Handle verification errors specifically
+            if (error instanceof NfcVerificationError) {
+                logger.warn('[controllers/nfc.controller.ts] Verification failed', {
+                    error: error.message
+                });
+
+                res.status(401).json({
+                    success: false,
+                    error: {
+                        code: 'VERIFICATION_FAILED',
+                        message: error.message
+                    },
+                    timestamp: new Date().toISOString()
+                });
+                return;
+            }
+
+            // Pass other errors to global error handler
+            next(error);
+        }
+    }
+
+    /**
+     * Retrieves tag statistics
+     * @param req - Express request
+     * @param res - Express response
+     * @param next - Express next function
+     */
+    async getTagStatistics(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const { tagId } = req.params;
+
+            if (!tagId) {
+                res.status(400).json({
+                    success: false,
+                    error: {
+                        code: 'MISSING_TAG_ID',
+                        message: 'Tag ID is required'
+                    },
+                    timestamp: new Date().toISOString()
+                });
+                return;
+            }
+
+            const statistics = await nfcService.getTagStatistics(tagId);
+
+            if (!statistics) {
+                res.status(404).json({
+                    success: false,
+                    error: {
+                        code: 'TAG_NOT_FOUND',
+                        message: 'Tag not found'
+                    },
+                    timestamp: new Date().toISOString()
+                });
+                return;
+            }
+
+            res.status(200).json({
+                success: true,
+                data: statistics,
+                timestamp: new Date().toISOString()
+            });
+
+        } catch (error) {
+            next(error);
+        }
+    }
+}
+
+// Export singleton instance
+export default new NfcController();
