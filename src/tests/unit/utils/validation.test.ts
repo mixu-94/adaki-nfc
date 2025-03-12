@@ -14,19 +14,20 @@ describe('Validation Utilities', () => {
 
         it('should return false when required fields are missing', () => {
             expect(validateSumMessage({ data: 'test' })).toBe(false);
-            expect(validateSumMessage({ type: 'test' })).toBe(false);
+            expect(validateSumMessage({ type: 'tag' })).toBe(false);
         });
 
         it('should return false when fields have incorrect types', () => {
             expect(validateSumMessage({ type: 123, data: 'test' })).toBe(false);
-            expect(validateSumMessage({ type: 'test', data: 123 })).toBe(false);
-            expect(validateSumMessage({ type: 'test', data: 'test', signature: 123 })).toBe(false);
+            expect(validateSumMessage({ type: 'tag', data: 123 })).toBe(false);
+            expect(validateSumMessage({ type: 'tag', data: 'test', signature: 123 })).toBe(false);
         });
 
         it('should return true for valid SUM message', () => {
-            expect(validateSumMessage({ type: 'test', data: 'test' })).toBe(true);
-            expect(validateSumMessage({ type: 'test', data: 'test', signature: 'test' })).toBe(true);
-            expect(validateSumMessage({ type: 'test', data: 'test', extraField: 'extra' })).toBe(true);
+            // Updated to use valid tag types
+            expect(validateSumMessage({ type: 'tag', data: 'test' })).toBe(true);
+            expect(validateSumMessage({ type: 'tagtt', data: 'test', signature: 'test' })).toBe(true);
+            expect(validateSumMessage({ type: 'tag', data: 'test', extraField: 'extra' })).toBe(true);
         });
     });
 

@@ -5,9 +5,9 @@ import { validateApiKeyFormat } from '../utils/validation';
 import logger from '../utils/logger';
 
 /**
- * Middleware that validates API keys for protected routes
- * @param req - Express request
- * @param res - Express response
+ * Middleware for authenticating API key requests
+ * @param req - Express request object
+ * @param res - Express response object
  * @param next - Express next function
  */
 export async function apiKeyMiddleware(req: Request, res: Response, next: NextFunction) {
@@ -15,7 +15,14 @@ export async function apiKeyMiddleware(req: Request, res: Response, next: NextFu
         // Extract API key from headers
         const apiKey = req.headers['x-api-key'];
 
-        // Check if API key exists
+        // Log debug information about request
+        logger.debug('[middleware/auth.middleware.ts] API Key Authentication', {
+            path: req.path,
+            method: req.method,
+            apiKeyPresent: !!apiKey
+        });
+
+        // Check if API key exists and is a string
         if (!apiKey || typeof apiKey !== 'string') {
             logger.warn('[middleware/auth.middleware.ts] Missing API key');
 
@@ -31,7 +38,9 @@ export async function apiKeyMiddleware(req: Request, res: Response, next: NextFu
 
         // Basic format validation before database check
         if (!validateApiKeyFormat(apiKey)) {
-            logger.warn('[middleware/auth.middleware.ts] Invalid API key format');
+            logger.warn('[middleware/auth.middleware.ts] Invalid API key format', {
+                apiKeyLength: apiKey.length
+            });
 
             return res.status(401).json({
                 success: false,
@@ -43,16 +52,22 @@ export async function apiKeyMiddleware(req: Request, res: Response, next: NextFu
             });
         }
 
-        // Validate API key with auth service
+        // Validate API key with authentication service
         const apiKeyData = await authService.validateApiKey(apiKey);
 
-        // Store API key info in request for later use
+        // Store API key info in request for potential later use
         req.apiKey = apiKeyData;
 
+        // Proceed to next middleware or route handler
         next();
     } catch (error) {
+        // Handle specific authentication errors
         if (error instanceof AuthenticationError) {
-            // Handle authentication errors
+            logger.warn('[middleware/auth.middleware.ts] Authentication error', {
+                errorMessage: error.message,
+                errorCode: error.name
+            });
+
             return res.status(error.statusCode).json({
                 success: false,
                 error: {
@@ -64,7 +79,7 @@ export async function apiKeyMiddleware(req: Request, res: Response, next: NextFu
         }
 
         // Handle unexpected errors
-        logger.error('[middleware/auth.middleware.ts] Unexpected error during authentication', { error });
+        logger.error('[middleware/auth.middleware.ts] Unexpected authentication error', { error });
 
         return res.status(500).json({
             success: false,

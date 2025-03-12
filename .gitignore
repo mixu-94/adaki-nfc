@@ -25,3 +25,11 @@ npm-debug.log*
 # OS specific files
 .DS_Store
 Thumbs.db
+
+# Test artifacts with sensitive data
+test-logs/test-results.log
+test-logs/test-report.html
+test-logs/coverage-report.html
+
+# Exception for lightweight diagnostics
+!test-logs/light-diagnostics.log
