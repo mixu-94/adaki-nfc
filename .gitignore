@@ -30,6 +30,9 @@ Thumbs.db
 test-logs/test-results.log
 test-logs/test-report.html
 test-logs/coverage-report.html
+test-logs/test-results.json
+test-logs/junit.xml
+
 
 # Exception for lightweight diagnostics
 !test-logs/light-diagnostics.log

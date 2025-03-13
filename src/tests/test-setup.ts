@@ -23,3 +23,30 @@ afterAll((done) => {
     // This would require custom configuration to access
     done();
 });
+
+
+// // src/tests/test-setup.ts
+// import { TestLogger } from '../utils/test-logger';
+
+// // Test-Logger vor allen Tests initialisieren
+// beforeAll(() => {
+//     TestLogger.init();
+// });
+
+// // Testergebnisse erfassen
+// afterEach((done) => {
+//     // Verwende Typzusicherungen, um Testinformationen sicher zu extrahieren
+//     const testState: any = expect.getState();
+//     const testName = testState?.currentTestName;
+//     const testStatus = testState?.testResults?.slice(-1)[0]?.status === 'passed';
+
+//     TestLogger.logTestResult(testName, !!testStatus);
+//     done();
+// });
+
+// // Coverage-Daten nach allen Tests protokollieren
+// afterAll((done) => {
+//     // Coverage-Daten sind nur im Nicht-Watch-Modus mit aktiviertem Coverage verfügbar
+//     // Dies würde eine benutzerdefinierte Konfiguration erfordern, um darauf zuzugreifen
+//     done();
+// });
