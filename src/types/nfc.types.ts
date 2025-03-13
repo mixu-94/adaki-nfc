@@ -1,7 +1,8 @@
+// src/types/nfc.types.ts
 /**
  * Represents a SUM message from an NFC tag
  */
-export interface SumMessage {
+export type SumMessage = {
     type: string;
     data: string;
     signature?: string;
@@ -11,7 +12,7 @@ export interface SumMessage {
 /**
  * Represents the result of verifying an NFC tag
  */
-export interface VerificationResult {
+export type VerificationResult = {
     isValid: boolean;
     tagId: string;
     timestamp: Date;
@@ -31,23 +32,38 @@ export class NfcVerificationError extends Error {
 /**
  * Represents a record in the verifications table
  */
-export interface VerificationRecord {
+export type VerificationRecord = {
     id?: string;
     tag_id: string;
     success: boolean;
     metadata?: Record<string, any>;
     ip_address?: string;
     user_agent?: string;
+    geolocation?: {
+        latitude: number;
+        longitude: number;
+    };
     created_at?: string;
 }
 
 /**
  * Represents a record in the tags table
  */
-export interface TagRecord {
+export type TagRecord = {
     id?: string;
     tag_id: string;
     first_verified_at: string;
     last_verified_at: string;
     verification_count: number;
+    redirect_url?: string | null;
+    is_active?: boolean;
+    updated_at?: string;
+}
+
+/**
+ * Configuration options for tag updates
+ */
+export type TagConfigurationOptions = {
+    redirectUrl?: string;
+    isActive?: boolean;
 }

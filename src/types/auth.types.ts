@@ -1,7 +1,8 @@
+// src/types/auth.types.ts
 /**
  * Represents an API key record in the database
  */
-export interface ApiKey {
+export type ApiKey = {
     id: string;
     name: string;
     key: string;

@@ -1,3 +1,4 @@
+// src/tests/integration/routes/nfc.routes.test.ts
 import request from 'supertest';
 import app from '../../../app';
 import authService from '../../../services/auth.service';
@@ -13,7 +14,7 @@ describe('NFC Routes', () => {
     let mockApiKey: string;
 
     beforeEach(() => {
-        // Setup comprehensive API key mock
+        // Setup mock API key
         mockApiKey = 'test-api-key-12345678901234567890';
 
         // Mock authentication service
@@ -27,7 +28,7 @@ describe('NFC Routes', () => {
             expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // Future expiration
         });
 
-        // Advanced NFC service mock with detailed scenario handling
+        // Mock NFC service
         (nfcService.verifyNfcTag as jest.Mock).mockImplementation((sumMessage) => {
             // NTAG 424 DNA standard tag scenario
             if (sumMessage.type === 'tag' && sumMessage.data.includes('EF963FF7')) {
@@ -38,7 +39,8 @@ describe('NFC Routes', () => {
                     metadata: {
                         tagType: 'NTAG 424 DNA',
                         scanMethod: 'SDMMAC',
-                        readCounter: 42
+                        readCounter: 42,
+                        redirectUrl: 'https://example.com/campaign/special-offer'
                     }
                 });
             }
@@ -52,13 +54,47 @@ describe('NFC Routes', () => {
                     metadata: {
                         tagType: 'NTAG 424 DNA TagTamper',
                         tamperStatus: 'intact',
-                        encryptionMethod: 'SDMMAC + SDMFileData'
+                        encryptionMethod: 'SDMMAC + SDMFileData',
+                        redirectUrl: 'https://example.com/tamper-proof'
                     }
                 });
             }
 
-            // Fallback error handling
+            // Invalid tag
             return Promise.reject(new NfcVerificationError('Verification failed'));
+        });
+
+        // Mock tag statistics
+        (nfcService.getTagStatistics as jest.Mock).mockImplementation((tagId) => {
+            if (tagId === 'ntag424-ef963ff7') {
+                return Promise.resolve({
+                    tag_id: 'ntag424-ef963ff7',
+                    first_verified_at: new Date().toISOString(),
+                    last_verified_at: new Date().toISOString(),
+                    verification_count: 42,
+                    redirect_url: 'https://example.com/campaign/special-offer',
+                    is_active: true
+                });
+            }
+
+            return Promise.resolve(null);
+        });
+
+        // Mock tag configuration update
+        (nfcService.updateTagConfiguration as jest.Mock).mockImplementation((tagId, config) => {
+            if (tagId === 'ntag424-ef963ff7') {
+                return Promise.resolve({
+                    tag_id: 'ntag424-ef963ff7',
+                    first_verified_at: new Date().toISOString(),
+                    last_verified_at: new Date().toISOString(),
+                    verification_count: 42,
+                    redirect_url: config.redirectUrl || 'https://example.com/campaign/special-offer',
+                    is_active: config.isActive !== undefined ? config.isActive : true,
+                    updated_at: new Date().toISOString()
+                });
+            }
+
+            return Promise.resolve(null);
         });
     });
 
@@ -78,12 +114,11 @@ describe('NFC Routes', () => {
                 .set('X-API-Key', mockApiKey)
                 .send({ sumMessage });
 
-            console.log('NTAG 424 DNA Verification Response:', response.body);
-
             expect(response.status).toBe(200);
             expect(response.body.success).toBe(true);
             expect(response.body.data.tagId).toBe('ntag424-ef963ff7');
             expect(response.body.data.metadata.tagType).toBe('NTAG 424 DNA');
+            expect(response.body.data.redirectUrl).toBe('https://example.com/campaign/special-offer');
         });
 
         it('should successfully handle a TagTamper NFC tag', async () => {
@@ -97,12 +132,11 @@ describe('NFC Routes', () => {
                 .set('X-API-Key', mockApiKey)
                 .send({ sumMessage });
 
-            console.log('TagTamper Verification Response:', response.body);
-
             expect(response.status).toBe(200);
             expect(response.body.success).toBe(true);
             expect(response.body.data.tagId).toBe('tamper-fdd387bf');
             expect(response.body.data.metadata.tagType).toBe('NTAG 424 DNA TagTamper');
+            expect(response.body.data.redirectUrl).toBe('https://example.com/tamper-proof');
         });
 
         it('should return 400 for invalid SUM message format', async () => {
@@ -134,6 +168,96 @@ describe('NFC Routes', () => {
             expect(response.status).toBe(401);
             expect(response.body.success).toBe(false);
             expect(response.body.error.code).toBe('MISSING_API_KEY');
+        });
+
+        it('should accept and process geolocation data', async () => {
+            const sumMessage = {
+                type: 'tag',
+                data: 'picc_data=EF963FF7828658A599F3041510671E88&cmac=94EED9EE65337086'
+            };
+
+            const geoLocation = {
+                latitude: 48.8566,
+                longitude: 2.3522
+            };
+
+            const response = await request(app)
+                .post('/api/nfc/verify')
+                .set('X-API-Key', mockApiKey)
+                .send({ sumMessage, geoLocation });
+
+            expect(response.status).toBe(200);
+            expect(response.body.success).toBe(true);
+            expect(nfcService.verifyNfcTag).toHaveBeenCalledWith(
+                sumMessage,
+                expect.any(String),
+                expect.any(String),
+                geoLocation
+            );
+        });
+    });
+
+    describe('GET /api/nfc/stats/:tagId', () => {
+        it('should return statistics for a valid tag', async () => {
+            const response = await request(app)
+                .get('/api/nfc/stats/ntag424-ef963ff7')
+                .set('X-API-Key', mockApiKey);
+
+            expect(response.status).toBe(200);
+            expect(response.body.success).toBe(true);
+            expect(response.body.data.tag_id).toBe('ntag424-ef963ff7');
+            expect(response.body.data.verification_count).toBe(42);
+        });
+
+        it('should return 404 for non-existent tag', async () => {
+            const response = await request(app)
+                .get('/api/nfc/stats/nonexistent-tag')
+                .set('X-API-Key', mockApiKey);
+
+            expect(response.status).toBe(404);
+            expect(response.body.success).toBe(false);
+            expect(response.body.error.code).toBe('TAG_NOT_FOUND');
+        });
+    });
+
+    describe('PUT /api/nfc/config/:tagId', () => {
+        it('should update tag configuration', async () => {
+            const newConfig = {
+                redirectUrl: 'https://example.com/new-campaign',
+                isActive: true
+            };
+
+            const response = await request(app)
+                .put('/api/nfc/config/ntag424-ef963ff7')
+                .set('X-API-Key', mockApiKey)
+                .send(newConfig);
+
+            expect(response.status).toBe(200);
+            expect(response.body.success).toBe(true);
+            expect(response.body.data.redirect_url).toBe(newConfig.redirectUrl);
+            expect(response.body.data.is_active).toBe(newConfig.isActive);
+        });
+
+        it('should return 404 for non-existent tag', async () => {
+            const response = await request(app)
+                .put('/api/nfc/config/nonexistent-tag')
+                .set('X-API-Key', mockApiKey)
+                .send({ redirectUrl: 'https://example.com' });
+
+            expect(response.status).toBe(404);
+            expect(response.body.success).toBe(false);
+            expect(response.body.error.code).toBe('TAG_NOT_FOUND');
+        });
+
+        it('should validate redirect URL format', async () => {
+            const response = await request(app)
+                .put('/api/nfc/config/ntag424-ef963ff7')
+                .set('X-API-Key', mockApiKey)
+                .send({ redirectUrl: 'invalid-url' });
+
+            expect(response.status).toBe(400);
+            expect(response.body.success).toBe(false);
+            expect(response.body.error.code).toBe('INVALID_REDIRECT_URL');
         });
     });
 });
