@@ -29,4 +29,16 @@ router.get(
     nfcController.getTagStatistics
 );
 
+/**
+ * @route PUT /api/nfc/config/:tagId
+ * @desc Update configuration for a specific tag
+ * @access Protected by API key
+ */
+router.put(
+    '/config/:tagId',
+    rateLimitMiddleware,
+    apiKeyMiddleware,
+    nfcController.updateTagConfiguration
+);
+
 export default router;

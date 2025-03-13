@@ -3,9 +3,6 @@ import { mockTagResponses, mockApiKeys, mockTagRecords } from './mock-data';
 import { NfcVerificationError } from '../../types/nfc.types';
 
 /**
- * Sets up all test mocks required for the NFC tag verification tests
- */
-/**
  * Extracts URL parameters from a query string or complete URL
  * @param data - URL query string or complete URL
  * @returns Object containing extracted parameters
@@ -64,16 +61,6 @@ export function setupTestMocks(): void {
             })
         }
     }));
-
-    /**
-     * Performs systematic cleanup of all mock implementations
-     * This function resets all mock implementations to prevent cross-test contamination
-     */
-    export function teardownTestMocks(): void {
-        // Reset all mocks
-        jest.resetModules();
-        jest.clearAllMocks();
-    }
 
     // Mock SDM service for tag verification
     jest.doMock('../../services/sdm.service', () => ({
@@ -298,5 +285,15 @@ export function setupTestMocks(): void {
             on: jest.fn(),
             disconnect: jest.fn()
         }
-    }))
-};
+    }));
+}
+
+/**
+ * Performs systematic cleanup of all mock implementations
+ * This function resets all mock implementations to prevent cross-test contamination
+ */
+export function teardownTestMocks(): void {
+    // Reset all mocks
+    jest.resetModules();
+    jest.clearAllMocks();
+}
