@@ -2,7 +2,7 @@
 import rateLimit from 'express-rate-limit';
 import RedisStore from 'rate-limit-redis';
 import { Request, Response, NextFunction } from 'express';
-import { redisClient } from '../config/redis';
+import { redisClient, isRedisAvailable } from '../config/redis';
 import config from '../config/app';
 import logger from '../utils/logger';
 
@@ -31,7 +31,7 @@ const limiterConfig: RateLimitOptions = {
     legacyHeaders: false,
 
     // Skip on error to prevent API being unavailable
-    skipFailedRequests: false,
+    skipFailedRequests: true, // Change to true to prevent failures
 
     // Custom error handler with Express types
     handler: (req: Request, res: Response, next: NextFunction): void => {
@@ -51,25 +51,29 @@ const limiterConfig: RateLimitOptions = {
     },
 };
 
-// Create rate limiter with Redis store (since Redis is always on)
+// Check if we're in a test environment
+const isTest = process.env.NODE_ENV === 'test';
+
+// Create rate limiter - use in-memory store for tests
 export const rateLimitMiddleware = rateLimit({
     ...limiterConfig,
-    store: new RedisStore({
-        // Pass redis client to store
-        sendCommand: async (...args: string[]) => {
-            return redisClient.sendCommand(args);
-        },
-        // Key prefix for Redis
-        prefix: 'ratelimit:',
-    }),
+    // Only use Redis store if Redis is available and we're not in a test environment
+    ...(isRedisAvailable() && !isTest ? {
+        store: new RedisStore({
+            // Pass redis client to store
+            sendCommand: async (...args: string[]) => {
+                return redisClient.sendCommand(args);
+            },
+            // Key prefix for Redis
+            prefix: 'ratelimit:',
+        })
+    } : {}) // Empty object falls back to memory store
 });
 
 // Log rate limiter configuration
 logger.info('[middleware/rate-limit.ts] Rate limiter configured', {
     windowMs: config.security.rateLimit.windowMs / 1000 / 60 + ' minutes',
     maxRequests: config.security.rateLimit.max,
-    usingRedis: true,
+    usingRedis: isRedisAvailable() && !isTest,
+    environment: process.env.NODE_ENV
 });
-
-
-

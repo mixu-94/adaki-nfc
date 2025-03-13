@@ -1,3 +1,4 @@
+// src/routes/nfc.routes.ts
 import { Router } from 'express';
 import nfcController from '../controllers/nfc.controller';
 import { apiKeyMiddleware } from '../middleware/auth.middleware';

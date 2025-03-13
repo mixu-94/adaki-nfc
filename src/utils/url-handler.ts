@@ -98,23 +98,6 @@ export class UrlHandler {
     }
 
     /**
-     * Builds a verification data object from URL parameters
-     * @param params - URL parameters
-     * @returns Verification data for SDM service
-     */
-    static buildVerificationData(params: Record<string, string>): Record<string, any> {
-        const verificationData: Record<string, any> = {};
-
-        // Copy all parameters to verification data
-        Object.assign(verificationData, params);
-
-        // Add metadata about the request
-        verificationData.processingTimestamp = new Date().toISOString();
-
-        return verificationData;
-    }
-
-    /**
      * Pre-processes a SUM message data field for verification
      * Handles both complete URLs and raw query parameters
      * @param data - SUM message data field

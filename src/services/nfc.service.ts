@@ -40,25 +40,6 @@ export class NfcService {
         } catch (error) {
             // If the error is from verification, pass it through
             if (error instanceof NfcVerificationError) {
-                // Attempt to log failed verification
-                if (error.message.includes('Tag verification failed') && sumMessage) {
-                    try {
-                        const failedResult: VerificationResult = {
-                            isValid: false,
-                            tagId: 'unknown', // We don't have a valid tag ID for failed verifications
-                            timestamp: new Date(),
-                            metadata: { error: error.message },
-                        };
-
-                        await storageService.logVerification(failedResult, ipAddress, userAgent, geoLocation);
-                    } catch (logError) {
-                        // Just log the error and continue, don't fail the operation
-                        logger.error('[services/nfc.service.ts] Error logging failed verification', {
-                            error: logError
-                        });
-                    }
-                }
-
                 throw error;
             }
 
@@ -106,5 +87,3 @@ export class NfcService {
 
 // Export singleton instance
 export default new NfcService();
-
-

@@ -2,7 +2,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { SumMessage, NfcVerificationError } from '../types/nfc.types';
 import nfcService from '../services/nfc.service';
-import { validateSumMessage, validateUrl } from '../utils/validation';
+import { validateSumMessage, validateUrl, validateGeoLocation } from '../utils/validation';
 import logger from '../utils/logger';
 
 export class NfcController {
@@ -14,7 +14,7 @@ export class NfcController {
      */
     async verifyTag(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const { sumMessage } = req.body;
+            const { sumMessage, geoLocation } = req.body;
 
             // Validate input
             if (!validateSumMessage(sumMessage)) {
@@ -31,8 +31,20 @@ export class NfcController {
                 return;
             }
 
-            // Extract optional geolocation data if present
-            const geoLocation = req.body.geoLocation;
+            // Validate geolocation if provided
+            if (geoLocation && !validateGeoLocation(geoLocation)) {
+                logger.warn('[controllers/nfc.controller.ts] Invalid geolocation format');
+
+                res.status(400).json({
+                    success: false,
+                    error: {
+                        code: 'INVALID_GEOLOCATION',
+                        message: 'Invalid geolocation format'
+                    },
+                    timestamp: new Date().toISOString()
+                });
+                return;
+            }
 
             // Process verification
             const result = await nfcService.verifyNfcTag(
@@ -218,6 +230,5 @@ export class NfcController {
 }
 
 export default new NfcController();
-
 
 
