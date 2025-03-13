@@ -55,9 +55,7 @@ export function validateSumMessage(sumMessage: any): sumMessage is SumMessage {
  * @returns boolean indicating if the format is valid
  */
 export function validateApiKeyFormat(apiKey: any): boolean {
-    // Based on the test error, it seems that a string of exactly 20 characters
-    // should return false, which means the length needs to be greater than 20
-    return typeof apiKey === 'string' && apiKey.length > 20;
+    return typeof apiKey === 'string' && apiKey.length >= 20;
 }
 
 /**
@@ -67,9 +65,9 @@ export function validateApiKeyFormat(apiKey: any): boolean {
  */
 export function validateUrl(url: string): boolean {
     try {
-        // Use URL constructor to validate URL format
-        new URL(url);
-        return true;
+        const urlObj = new URL(url);
+        // Check that the URL has a valid protocol
+        return urlObj.protocol === 'http:' || urlObj.protocol === 'https:';
     } catch (error) {
         logger.warn('[utils/validation.ts] Invalid URL format', {
             url: url.substring(0, 30) + (url.length > 30 ? '...' : '')

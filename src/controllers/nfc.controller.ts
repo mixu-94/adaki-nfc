@@ -50,7 +50,7 @@ export class NfcController {
             const result = await nfcService.verifyNfcTag(
                 sumMessage,
                 req.ip,
-                req.headers['user-agent'] as string,
+                req.headers['user-agent'] ? String(req.headers['user-agent']) : 'Unknown',
                 geoLocation
             );
 
