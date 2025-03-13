@@ -2,7 +2,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { SumMessage, NfcVerificationError } from '../types/nfc.types';
 import nfcService from '../services/nfc.service';
-import { validateSumMessage } from '../utils/validation';
+import { validateSumMessage, validateUrl } from '../utils/validation';
 import logger from '../utils/logger';
 
 export class NfcController {
@@ -50,7 +50,6 @@ export class NfcController {
                     isValid: result.isValid,
                     metadata: result.metadata,
                     verifiedAt: result.timestamp.toISOString(),
-                    // Include redirect URL if available in metadata
                     redirectUrl: result.metadata?.redirectUrl
                 },
                 message: 'NFC tag successfully verified',
@@ -151,7 +150,19 @@ export class NfcController {
             }
 
             // Validate input
-            if (redirectUrl !== undefined && typeof redirectUrl !== 'string') {
+            if (redirectUrl !== undefined && typeof redirectUrl === 'string') {
+                if (!validateUrl(redirectUrl)) {
+                    res.status(400).json({
+                        success: false,
+                        error: {
+                            code: 'INVALID_REDIRECT_URL',
+                            message: 'Invalid URL format'
+                        },
+                        timestamp: new Date().toISOString()
+                    });
+                    return;
+                }
+            } else if (redirectUrl !== undefined) {
                 res.status(400).json({
                     success: false,
                     error: {
@@ -206,7 +217,6 @@ export class NfcController {
     }
 }
 
-// Export singleton instance
 export default new NfcController();
 
 
