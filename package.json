@@ -13,7 +13,6 @@
     "test:unit": "jest --testMatch='**/tests/unit/**/*.test.{ts,js}'",
     "test:integration": "jest --testMatch='**/tests/integration/**/*.test.{ts,js}'",
     "test:light": "jest --no-coverage --reporters=default",
-    "test:log": "jest --json --outputFile=./test-logs/test-results.json",
     "lint": "eslint . --ext .ts"
   },
   "keywords": [
