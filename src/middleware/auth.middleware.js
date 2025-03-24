@@ -38,9 +38,10 @@ export async function apiKeyMiddleware(req, res, next) {
             return next();
         }
 
-        // If not in cache, check database
+        // If not in cache, check database using the correct schema approach
         const { data, error } = await supabase
-            .from(`${SCHEMA_NAME}.api_keys`)  // Explicitly use schema name
+            .schema(SCHEMA_NAME)  // Set schema this way
+            .from('api_keys')     // Then use table name without schema prefix
             .select('*')
             .eq('key', apiKey)
             .eq('is_active', true)

@@ -1,6 +1,9 @@
 import supabase from '../config/supabase.js';
 import logger from '../utils/logger.js';
 
+// Schema name - adjust if needed
+const SCHEMA_NAME = 'nfc_verify';
+
 class StorageService {
     /**
      * Logs a verification attempt to Supabase
@@ -18,6 +21,7 @@ class StorageService {
         try {
             // Log the verification attempt
             const { error: verificationError } = await supabase
+                .schema(SCHEMA_NAME)
                 .from('verifications')
                 .insert({
                     tag_id: result.tagId,
@@ -36,6 +40,7 @@ class StorageService {
             if (result.isValid) {
                 // Check if tag exists
                 const { data: existingTag } = await supabase
+                    .schema(SCHEMA_NAME)
                     .from('tags')
                     .select('*')
                     .eq('tag_id', result.tagId)
@@ -44,6 +49,7 @@ class StorageService {
                 if (existingTag) {
                     // Update existing tag
                     await supabase
+                        .schema(SCHEMA_NAME)
                         .from('tags')
                         .update({
                             last_verified_at: new Date().toISOString(),
@@ -53,6 +59,7 @@ class StorageService {
                 } else {
                     // Insert new tag with redirect URL
                     await supabase
+                        .schema(SCHEMA_NAME)
                         .from('tags')
                         .insert({
                             tag_id: result.tagId,
@@ -86,6 +93,7 @@ class StorageService {
     async getRedirectUrl(tagId) {
         try {
             const { data, error } = await supabase
+                .schema(SCHEMA_NAME)
                 .from('tags')
                 .select('redirect_url')
                 .eq('tag_id', tagId)
