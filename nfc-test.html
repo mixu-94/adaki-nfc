@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>NFC Tag Tester</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 700px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      h1 {
+        color: #333;
+      }
+      .form-group {
+        margin-bottom: 15px;
+      }
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+      }
+      input[type="text"],
+      select {
+        width: 100%;
+        padding: 8px;
+        box-sizing: border-box;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      button {
+        background-color: #4caf50;
+        color: white;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      button:hover {
+        background-color: #45a049;
+      }
+      #result {
+        margin-top: 20px;
+        padding: 15px;
+        background-color: #f8f8f8;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      .tabs {
+        display: flex;
+        margin-bottom: 20px;
+      }
+      .tab {
+        padding: 10px 20px;
+        cursor: pointer;
+        background-color: #f1f1f1;
+        border: 1px solid #ddd;
+        border-radius: 4px 4px 0 0;
+        margin-right: 5px;
+      }
+      .tab.active {
+        background-color: #4caf50;
+        color: white;
+      }
+      .tab-content {
+        display: none;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 0 4px 4px 4px;
+      }
+      .tab-content.active {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>NFC Tag Testing Tool</h1>
+
+    <div class="tabs">
+      <div class="tab active" data-tab="verify">Verify Tag (API)</div>
+      <div class="tab" data-tab="redirect">Redirect Tag</div>
+    </div>
+
+    <div id="verify-tab" class="tab-content active">
+      <h2>Verify NFC Tag (API Response)</h2>
+      <form id="verifyForm">
+        <div class="form-group">
+          <label for="api-key">API Key:</label>
+          <input
+            type="text"
+            id="api-key"
+            value="6a93b0c5f7d84e47b4c32a8e9f128b6c"
+          />
+        </div>
+        <div class="form-group">
+          <label for="verify-id">Tag ID:</label>
+          <input
+            type="text"
+            id="verify-id"
+            value="FDD387BF32A33A7C40CF259675B3A1E2"
+          />
+        </div>
+        <div class="form-group">
+          <label for="verify-data">Data:</label>
+          <input
+            type="text"
+            id="verify-data"
+            value="EA050C282D8E9043E28F7A171464D697"
+          />
+        </div>
+        <div class="form-group">
+          <label for="verify-signature">Signature:</label>
+          <input type="text" id="verify-signature" value="758110182134ECE9" />
+        </div>
+        <button type="submit">Verify Tag</button>
+      </form>
+    </div>
+
+    <div id="redirect-tab" class="tab-content">
+      <h2>Redirect NFC Tag (Browser Redirect)</h2>
+      <p>This will check the redirect URL without actually redirecting.</p>
+      <form id="redirectForm">
+        <div class="form-group">
+          <label for="redirect-id">Tag ID:</label>
+          <input
+            type="text"
+            id="redirect-id"
+            value="FDD387BF32A33A7C40CF259675B3A1E2"
+          />
+        </div>
+        <div class="form-group">
+          <label for="redirect-data">Data:</label>
+          <input
+            type="text"
+            id="redirect-data"
+            value="EA050C282D8E9043E28F7A171464D697"
+          />
+        </div>
+        <div class="form-group">
+          <label for="redirect-signature">Signature:</label>
+          <input type="text" id="redirect-signature" value="758110182134ECE9" />
+        </div>
+        <button type="submit">Check Redirect URL</button>
+      </form>
+    </div>
+
+    <div id="result"></div>
+
+    <h3>Preset Sample Tags</h3>
+    <select id="presetTags">
+      <option value="">Select a preset tag...</option>
+      <option value="tag1">NTAG 424 DNA Sample</option>
+      <option value="tag2">NTAG 424 DNA TagTamper Sample</option>
+      <option value="tag3">Custom Tag</option>
+    </select>
+
+    <script>
+      // Tab switching
+      document.querySelectorAll(".tab").forEach((tab) => {
+        tab.addEventListener("click", () => {
+          // Deactivate all tabs
+          document
+            .querySelectorAll(".tab")
+            .forEach((t) => t.classList.remove("active"));
+          document
+            .querySelectorAll(".tab-content")
+            .forEach((c) => c.classList.remove("active"));
+
+          // Activate clicked tab
+          tab.classList.add("active");
+          document
+            .getElementById(`${tab.dataset.tab}-tab`)
+            .classList.add("active");
+        });
+      });
+
+      // Verify form submission
+      document
+        .getElementById("verifyForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const apiKey = document.getElementById("api-key").value;
+          const id = document.getElementById("verify-id").value;
+          const data = document.getElementById("verify-data").value;
+          const signature = document.getElementById("verify-signature").value;
+
+          document.getElementById("result").innerHTML = "Processing...";
+
+          try {
+            console.log("API Key:", apiKey); // Log the API key for debugging
+
+            const response = await fetch(
+              "http://localhost:3000/api/nfc/verify",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "x-api-key": apiKey,
+                },
+                body: JSON.stringify({
+                  sumMessage: { id, data, signature },
+                }),
+              }
+            );
+
+            const result = await response.json();
+            document.getElementById(
+              "result"
+            ).innerHTML = `<h3>API Response:</h3><pre>${JSON.stringify(
+              result,
+              null,
+              2
+            )}</pre>`;
+
+            if (
+              !response.ok &&
+              result.error &&
+              result.error.code === "INVALID_API_KEY"
+            ) {
+              document.getElementById(
+                "result"
+              ).innerHTML += `<p style="color: red; margin-top: 10px;">
+                        <strong>API Key Error!</strong> Make sure you've added this key to your database:<br>
+                        <code>INSERT INTO nfc_verify.api_keys (name, key, is_active) VALUES ('TestKey', '${apiKey}', true);</code>
+                        </p>`;
+            }
+          } catch (error) {
+            document.getElementById(
+              "result"
+            ).innerHTML = `<p style="color: red">Error: ${error.message}</p>`;
+          }
+        });
+
+      // Redirect form submission - check URL without redirecting
+      document
+        .getElementById("redirectForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const id = document.getElementById("redirect-id").value;
+          const data = document.getElementById("redirect-data").value;
+          const signature = document.getElementById("redirect-signature").value;
+
+          document.getElementById("result").innerHTML =
+            "Checking redirect URL...";
+
+          try {
+            const response = await fetch(
+              "http://localhost:3000/api/nfc/verify",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "x-api-key": document.getElementById("api-key").value,
+                },
+                body: JSON.stringify({
+                  sumMessage: { id, data, signature },
+                }),
+              }
+            );
+
+            const result = await response.json();
+
+            if (result.success && result.data && result.data.redirectUrl) {
+              document.getElementById(
+                "result"
+              ).innerHTML = `<h3>Redirect URL:</h3>
+                        <p><strong>${result.data.redirectUrl}</strong></p>
+                        <p>The tag would redirect to this URL.</p>
+                        <button id="goToUrl">Go to URL</button>`;
+
+              document
+                .getElementById("goToUrl")
+                .addEventListener("click", () => {
+                  window.open(result.data.redirectUrl, "_blank");
+                });
+            } else {
+              document.getElementById(
+                "result"
+              ).innerHTML = `<h3>No Redirect URL Found</h3>
+                        <p>This tag does not have a redirect URL configured.</p>
+                        <pre>${JSON.stringify(result, null, 2)}</pre>`;
+            }
+          } catch (error) {
+            document.getElementById(
+              "result"
+            ).innerHTML = `<p style="color: red">Error: ${error.message}</p>`;
+          }
+        });
+
+      // Sample tag presets
+      const presets = {
+        tag1: {
+          id: "FDD387BF32A33A7C40CF259675B3A1E2",
+          data: "EA050C282D8E9043E28F7A171464D697",
+          signature: "758110182134ECE9",
+        },
+        tag2: {
+          id: "8EE8E27DE3974FFE245F96C71087129B2E8449C9FF346F65",
+          data: "48987A0D55638C017D1F4DC3D8ADD910",
+          signature: "862E781E52244A75",
+        },
+        tag3: {
+          id: "041E3C8A2D6B80",
+          data: "000006",
+          signature: "4B00064004B0B3D3",
+        },
+      };
+
+      document.getElementById("presetTags").addEventListener("change", (e) => {
+        const preset = presets[e.target.value];
+        if (!preset) return;
+
+        // Fill verify form
+        document.getElementById("verify-id").value = preset.id;
+        document.getElementById("verify-data").value = preset.data;
+        document.getElementById("verify-signature").value = preset.signature;
+
+        // Fill redirect form
+        document.getElementById("redirect-id").value = preset.id;
+        document.getElementById("redirect-data").value = preset.data;
+        document.getElementById("redirect-signature").value = preset.signature;
+      });
+    </script>
+  </body>
+</html>
+
+<!-- <!DOCTYPE html>
+<html>
+  <head>
+    <title>NFC Tag Tester</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 700px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      h1 {
+        color: #333;
+      }
+      .form-group {
+        margin-bottom: 15px;
+      }
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+      }
+      input[type="text"],
+      select {
+        width: 100%;
+        padding: 8px;
+        box-sizing: border-box;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      button {
+        background-color: #4caf50;
+        color: white;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      button:hover {
+        background-color: #45a049;
+      }
+      #result {
+        margin-top: 20px;
+        padding: 15px;
+        background-color: #f8f8f8;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      .tabs {
+        display: flex;
+        margin-bottom: 20px;
+      }
+      .tab {
+        padding: 10px 20px;
+        cursor: pointer;
+        background-color: #f1f1f1;
+        border: 1px solid #ddd;
+        border-radius: 4px 4px 0 0;
+        margin-right: 5px;
+      }
+      .tab.active {
+        background-color: #4caf50;
+        color: white;
+      }
+      .tab-content {
+        display: none;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 0 4px 4px 4px;
+      }
+      .tab-content.active {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>NFC Tag Testing Tool</h1>
+
+    <div class="tabs">
+      <div class="tab active" data-tab="verify">Verify Tag (API)</div>
+      <div class="tab" data-tab="redirect">Redirect Tag</div>
+    </div>
+
+    <div id="verify-tab" class="tab-content active">
+      <h2>Verify NFC Tag (API Response)</h2>
+      <form id="verifyForm">
+        <div class="form-group">
+          <label for="api-key">API Key:</label>
+          <input
+            type="text"
+            id="api-key"
+            value="6a93b0c5f7d84e47b4c32a8e9f128b6c"
+          />
+        </div>
+        <div class="form-group">
+          <label for="verify-id">Tag ID:</label>
+          <input
+            type="text"
+            id="verify-id"
+            value="FDD387BF32A33A7C40CF259675B3A1E2"
+          />
+        </div>
+        <div class="form-group">
+          <label for="verify-data">Data:</label>
+          <input
+            type="text"
+            id="verify-data"
+            value="EA050C282D8E9043E28F7A171464D697"
+          />
+        </div>
+        <div class="form-group">
+          <label for="verify-signature">Signature:</label>
+          <input type="text" id="verify-signature" value="758110182134ECE9" />
+        </div>
+        <button type="submit">Verify Tag</button>
+      </form>
+    </div>
+
+    <div id="redirect-tab" class="tab-content">
+      <h2>Redirect NFC Tag (Browser Redirect)</h2>
+      <p>
+        This will submit the form and redirect your browser to the destination
+        URL.
+      </p>
+      <form
+        id="redirectForm"
+        method="post"
+        action="http://localhost:3000/api/nfc/redirect"
+      >
+        <div class="form-group">
+          <label for="redirect-id">Tag ID:</label>
+          <input
+            type="text"
+            id="redirect-id"
+            name="sumMessage[id]"
+            value="FDD387BF32A33A7C40CF259675B3A1E2"
+          />
+        </div>
+        <div class="form-group">
+          <label for="redirect-data">Data:</label>
+          <input
+            type="text"
+            id="redirect-data"
+            name="sumMessage[data]"
+            value="EA050C282D8E9043E28F7A171464D697"
+          />
+        </div>
+        <div class="form-group">
+          <label for="redirect-signature">Signature:</label>
+          <input
+            type="text"
+            id="redirect-signature"
+            name="sumMessage[signature]"
+            value="758110182134ECE9"
+          />
+        </div>
+        <button type="submit">Test Redirect</button>
+      </form>
+    </div>
+
+    <div id="result"></div>
+
+    <h3>Preset Sample Tags</h3>
+    <select id="presetTags">
+      <option value="">Select a preset tag...</option>
+      <option value="tag1">NTAG 424 DNA Sample</option>
+      <option value="tag2">NTAG 424 DNA TagTamper Sample</option>
+      <option value="tag3">Custom Tag</option>
+    </select>
+
+    <script>
+      // Tab switching
+      document.querySelectorAll(".tab").forEach((tab) => {
+        tab.addEventListener("click", () => {
+          // Deactivate all tabs
+          document
+            .querySelectorAll(".tab")
+            .forEach((t) => t.classList.remove("active"));
+          document
+            .querySelectorAll(".tab-content")
+            .forEach((c) => c.classList.remove("active"));
+
+          // Activate clicked tab
+          tab.classList.add("active");
+          document
+            .getElementById(`${tab.dataset.tab}-tab`)
+            .classList.add("active");
+        });
+      });
+
+      // Verify form submission
+      document
+        .getElementById("verifyForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const apiKey = document.getElementById("api-key").value;
+          const id = document.getElementById("verify-id").value;
+          const data = document.getElementById("verify-data").value;
+          const signature = document.getElementById("verify-signature").value;
+
+          document.getElementById("result").innerHTML = "Processing...";
+
+          try {
+            const response = await fetch(
+              "http://localhost:3000/api/nfc/verify",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "x-api-key": apiKey,
+                },
+                body: JSON.stringify({
+                  sumMessage: { id, data, signature },
+                }),
+              }
+            );
+
+            const result = await response.json();
+            document.getElementById(
+              "result"
+            ).innerHTML = `<h3>API Response:</h3><pre>${JSON.stringify(
+              result,
+              null,
+              2
+            )}</pre>`;
+          } catch (error) {
+            document.getElementById(
+              "result"
+            ).innerHTML = `<p style="color: red">Error: ${error.message}</p>`;
+          }
+        });
+
+      // Sample tag presets
+      const presets = {
+        tag1: {
+          id: "FDD387BF32A33A7C40CF259675B3A1E2",
+          data: "EA050C282D8E9043E28F7A171464D697",
+          signature: "758110182134ECE9",
+        },
+        tag2: {
+          id: "8EE8E27DE3974FFE245F96C71087129B2E8449C9FF346F65",
+          data: "48987A0D55638C017D1F4DC3D8ADD910",
+          signature: "862E781E52244A75",
+        },
+        tag3: {
+          id: "041E3C8A2D6B80",
+          data: "000006",
+          signature: "4B00064004B0B3D3",
+        },
+      };
+
+      document.getElementById("presetTags").addEventListener("change", (e) => {
+        const preset = presets[e.target.value];
+        if (!preset) return;
+
+        // Fill verify form
+        document.getElementById("verify-id").value = preset.id;
+        document.getElementById("verify-data").value = preset.data;
+        document.getElementById("verify-signature").value = preset.signature;
+
+        // Fill redirect form
+        document.getElementById("redirect-id").value = preset.id;
+        document.getElementById("redirect-data").value = preset.data;
+        document.getElementById("redirect-signature").value = preset.signature;
+      });
+    </script>
+  </body>
+</html> -->
