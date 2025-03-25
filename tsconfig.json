@@ -11,6 +11,6 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "debug-api-keys.js"],
   "exclude": ["node_modules", "dist", "**/*.test.ts"]
 }
