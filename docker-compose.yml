@@ -1,0 +1,32 @@
+version: "3.8"
+
+services:
+  adaki-nfc:
+    build:
+      context: ./adaki-nfc
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_KEY=${SUPABASE_KEY}
+      - SDM_BACKEND_URL=http://sdm-backend:5000
+      - REDIS_URL=redis://redis:6379
+      - LOG_LEVEL=info
+    depends_on:
+      - redis
+      - sdm-backend
+
+  sdm-backend:
+    image: icedevml/sdm-backend:latest
+    ports:
+      - "5000:80"
+    environment:
+      - MASTER_KEY=${MASTER_KEY:-00000000000000000000000000000000}
+
+  redis:
+    image: redis:6-alpine
+    ports:
+      - "6379:6379"
