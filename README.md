@@ -1,10 +1,10 @@
-# adaki-nfc
+# adaki-nfc-verify
 
 A backend service for NFC tag verification using SUM (Secure Unique Message) protocol with Supabase integration for data persistence.
 
 ## System Overview
 
-adaki-nfc is a dedicated Node.js backend service that:
+adaki-nfc-verify is a dedicated Node.js backend service that:
 
 1. **Verifies NFC tags** by communicating with a separate Python-based SDM backend service
 2. **Logs verification data** to Supabase for analytics and tracking
@@ -13,7 +13,7 @@ adaki-nfc is a dedicated Node.js backend service that:
 
 The system follows a microservices architecture:
 
-- adaki-nfc: Node.js service handling API requests, verification routing, and data logging
+- adaki-nfc-verify: Node.js service handling API requests, verification routing, and data logging
 - sdm-backend: External Python service responsible for cryptographic verification of SUM messages
 - Supabase: PostgreSQL database with RESTful API for data storage
 
@@ -208,8 +208,8 @@ Optional caching layer for improved performance.
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/adaki-nfc.git
-cd adaki-nfc
+git clone https://github.com/yourusername/adaki-nfc-verify.git
+cd adaki-nfc-verify
 
 # Install dependencies
 npm install
@@ -226,10 +226,10 @@ npm start
 
 ```bash
 # Build the image
-docker build -t adaki-nfc .
+docker build -t adaki-nfc-verify .
 
 # Run the container
-docker run -p 3000:3000 --env-file .env adaki-nfc
+docker run -p 3000:3000 --env-file .env adaki-nfc-verify
 ```
 
 ## Extending the System

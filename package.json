@@ -1,5 +1,5 @@
 {
-  "name": "adaki-nfc",
+  "name": "adaki-nfc-verify",
   "version": "1.0.0",
   "description": "Backend for NFC tag verification",
   "main": "src/app.js",

@@ -1,7 +1,7 @@
 version: "3.8"
 
 services:
-  adaki-nfc:
+  adaki-nfc-verify:
     build:
       context: ${ADAKI_CONTEXT:-.}
       dockerfile: ${ADAKI_DOCKERFILE:-Dockerfile}
